@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.concurrent.*;
 
+//--- Первый прогонки ---//
+//LongSummaryStatistics{count=10000, sum=12422, min=0, average=1,242200, max=23}
+//LongSummaryStatistics{count=10000, sum=12260, min=0, average=1,226000, max=9}
+//LongSummaryStatistics{count=10000, sum=11974, min=0, average=1,197400, max=8}
+//LongSummaryStatistics{count=10000, sum=12154, min=0, average=1,215400, max=11}
+//LongSummaryStatistics{count=10000, sum=14754, min=0, average=1,475400, max=27}
 
 public class TestCase {
     private final static Logger logger = LoggerFactory.getLogger(TestCase.class);
@@ -28,8 +34,11 @@ public class TestCase {
         ExecutorService pool = Executors.newCachedThreadPool();
         List<Future<?>> futureList = new ArrayList<>();
         for (int threadNumber = 0; threadNumber < THREAD_COUNT; ++threadNumber) {
-            int threadColor = ThreadLocalRandom.current().nextInt(1, 255<<17);
+            int threadColor = ThreadLocalRandom.current().nextInt(1, 255 << 17);
             final RestTemplate rest = new RestTemplate();
+
+            warn(rest, threadColor);
+
             futureList.add(pool.submit(() -> {
                 PixelRequest pixel = new PixelRequest();
                 pixel.setColor(threadColor);
@@ -41,8 +50,8 @@ public class TestCase {
                     stopWatch.start();
                     try {
                         ResultResponse res = rest.postForObject(URL, pixel, ResultResponse.class);
-                    }catch (Exception e){
-                        logger.error(e.getMessage(),e);
+                    } catch (Exception e) {
+                        logger.error(e.getMessage(), e);
                     }
                     stopWatch.stop();
                     stats.accept(stopWatch.getLastTaskTimeMillis());
@@ -62,5 +71,15 @@ public class TestCase {
             }
         }
         System.out.println(stats);
+    }
+
+    private void warn(RestTemplate rest, int threadColor) {
+        PixelRequest pixel = new PixelRequest();
+        pixel.setColor(threadColor);
+        for (int i = 0; i < REQUEST_COUNT; i++) {
+            pixel.setX(ThreadLocalRandom.current().nextInt(0, 100));
+            pixel.setY(ThreadLocalRandom.current().nextInt(0, 100));
+            rest.postForObject(URL, pixel, ResultResponse.class);
+        }
     }
 }
