@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Контейнер для хранения информации о карте
@@ -26,5 +27,5 @@ public class Map implements Serializable {
      *  17-24 биты - red
      *  25-32 - не используются
      */
-    private int[] colors;
+    private ConcurrentHashMap colors;
 }

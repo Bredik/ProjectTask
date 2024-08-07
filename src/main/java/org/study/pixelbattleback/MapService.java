@@ -11,8 +11,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class MapService {
@@ -23,10 +24,9 @@ public class MapService {
     private final int width;
 
     private final int height;
+    private ConcurrentHashMap colors;
 
-    private final int[] colors;
-
-    private boolean isChanged;
+    private AtomicBoolean isChanged = new AtomicBoolean(false);
 
     /**
      * Пытаемся загрузить карту из файла на старте, или же начинаем с пустой карты
@@ -35,7 +35,7 @@ public class MapService {
         Map tmp = new Map();
         tmp.setWidth(100);
         tmp.setHeight(100);
-        tmp.setColors(new int[tmp.getWidth() * tmp.getHeight()]);
+        tmp.setColors(new ConcurrentHashMap<>(128));
         try (FileInputStream fileInputStream = new FileInputStream(MAP_BIN);
              ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             Object o = objectInputStream.readObject();
@@ -54,29 +54,23 @@ public class MapService {
      * @param pixel
      * @return
      */
-    public synchronized boolean draw(PixelRequest pixel) {
+    public boolean draw(PixelRequest pixel) {
         int x = pixel.getX();
         int y = pixel.getY();
         if (x < 0 || x >= width || y < 0 || y >= height) {
             return false;
         }
-        colors[y * width + x] = pixel.getColor();
-        isChanged = true;
+        var p = y * width + x;
+        if (colors.contains(p)) {
+            colors.put(y * width + x, pixel.getColor());
+            isChanged.set(true);
+        }
         return true;
-    }
-
-    /**
-     * Чтение всей карты
-     *
-     * @return
-     */
-    private synchronized int[] getColors() {
-        return Arrays.copyOf(colors, colors.length);
     }
 
     public Map getMap() {
         Map mapObj = new Map();
-        mapObj.setColors(getColors());
+        mapObj.setColors(colors);
         mapObj.setWidth(width);
         mapObj.setHeight(height);
         return mapObj;
@@ -86,11 +80,11 @@ public class MapService {
      * Периодически сохраняем карту в файл
      */
     @Scheduled(fixedDelay = 15, timeUnit = TimeUnit.SECONDS)
-    public synchronized void writeToFile() {
-        if (!isChanged) {
+    public void writeToFile() {
+        if (isChanged.get()) {
             return;
         }
-        isChanged = false;
+        isChanged.set(false);
         try (FileOutputStream fileOutputStream = new FileOutputStream(MAP_BIN);
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
             objectOutputStream.writeObject(getMap());
@@ -99,6 +93,4 @@ public class MapService {
             logger.error(e.getMessage(), e);
         }
     }
-
-
 }

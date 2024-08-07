@@ -20,6 +20,13 @@ import java.util.concurrent.*;
 //LongSummaryStatistics{count=10000, sum=12154, min=0, average=1,215400, max=11}
 //LongSummaryStatistics{count=10000, sum=14754, min=0, average=1,475400, max=27}
 
+/////итог
+//LongSummaryStatistics{count=10000, sum=10095, min=0, average=1,009500, max=6}
+//LongSummaryStatistics{count=10000, sum=9896, min=0, average=0,989600, max=4}
+//LongSummaryStatistics{count=10000, sum=9944, min=0, average=0,994400, max=5}
+//LongSummaryStatistics{count=10000, sum=10021, min=0, average=1,002100, max=5}
+//LongSummaryStatistics{count=10000, sum=9973, min=0, average=0,997300, max=13}
+
 public class TestCase {
     private final static Logger logger = LoggerFactory.getLogger(TestCase.class);
 
