@@ -60,11 +60,10 @@ public class MapService {
         if (x < 0 || x >= width || y < 0 || y >= height) {
             return false;
         }
-        var p = y * width + x;
-        if (colors.contains(p)) {
-            colors.put(y * width + x, pixel.getColor());
-            isChanged.set(true);
-        }
+
+        colors.put(y * width + x, pixel.getColor());
+        isChanged.set(true);
+
         return true;
     }
 
